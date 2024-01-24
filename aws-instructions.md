@@ -111,6 +111,7 @@ aws network-firewall create-rule-group \
 
 Values to record: Rule Group ARN
 
+```
 aws network-firewall create-firewall-policy \
     --firewall-policy-name k8s-hard-way-firewall-policy \
     --firewall-policy '{                       
