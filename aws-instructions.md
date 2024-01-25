@@ -140,3 +140,57 @@ aws network-firewall create-firewall \
   --firewall-policy-arn ${FW_POLICY_ARN}
 ```
 
+## Kubernetes Public IP Address
+
+```
+aws ec2 allocate-address \
+--region eu-central-1 \
+--tag-specification ResourceType=elastic-ip,Tags='[{Key="name",Value="k8s-hard-way-elastic-ip"}]' \
+--domain vpc
+```
+
+Values to record: Allocation ID
+
+Until the IP is associated with a running instance, AWS will charge an hourly fee.
+To reduce spending, it might be better to release the IP address until needed.
+
+```
+aws ec2 release-address --allocation-id ${ASSOCIATION_ID}
+```
+
+## Compute Instances
+
+### Kubernetes Controllers
+
+
+    --key-name key-worker${i} \
+
+```
+for i in 0 1 2; do
+  aws ec2 run-instances \
+    --image-id ami-0662ac347458e7d4c \
+    --instance-type m6g.large \
+    --subnet-id subnet-09d9a327014289c5f \
+    --private-ip-address 10.240.0.2${i} \
+    --region eu-central-1 \
+    --tag-specifications ResourceType=instance,Tags='[{Key="Name",Value="worker-${i}"},{Key="Project",Value="k8s-hard-way"},{Key="Role",Value="Worker"}]' \
+    --block-device-mappings '[
+    {
+        "DeviceName": "/dev/sdh",
+        "Ebs": {
+            "DeleteOnTermination": true,
+            "VolumeSize": 200,
+            "VolumeType": "gp2"
+        }
+    }
+]'
+done
+```
+
+## Deleting resources
+
+```
+aws network-firewall delete-firewall --firewall-name k8s-hard-way-firewall
+aws network-firewall delete-firewall-policy --firewall-policy-name k8s-hard-way-firewall-policy
+
+```
